@@ -1,11 +1,12 @@
 from flask import Flask
+import sys
 app = Flask(__name__)
 
-serverName = 'Server 1'
+serverName = sys.argv[1]
 
 @app.route('/')
 def hello_world():
    return serverName
 
 if __name__ == '__main__':
-   app.run()
+   app.run(port=sys.argv[2])
