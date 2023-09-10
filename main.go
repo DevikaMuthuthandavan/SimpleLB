@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	serverlist = []string{
-		"http://127.0.0.1:5000",
-		"http://127.0.0.1:5001",
-		"http://127.0.0.1:5002",
-		"http://127.0.0.1:5003",
-		"http://127.0.0.1:5004",
+	serverlist = []*httputil.ReverseProxy{
+		createHost("http://127.0.0.1:5000"),
+		createHost("http://127.0.0.1:5001"),
+		createHost("http://127.0.0.1:5002"),
+		createHost("http://127.0.0.1:5003"),
+		createHost("http://127.0.0.1:5004"),
 	}
 
 	lastServedIdx = 0
@@ -27,16 +27,19 @@ func main() {
 }
 
 func forwardRequest(res http.ResponseWriter, req *http.Request) {
-	url := getServer()
-	rProxy := httputil.NewSingleHostReverseProxy(url)
-	log.Printf("Routing the request to the url %s", url.String())
-	rProxy.ServeHTTP(res, req)
+	server := getServer()
+	server.ServeHTTP(res, req)
 	//fmt.Fprintln(res, "Hello from load balancer")
 }
 
-func getServer() *url.URL {
-	serverUrl := serverlist[(lastServedIdx+1)%5]
-	url, _ := url.Parse(serverUrl)
-	lastServedIdx++
-	return url
+func getServer() *httputil.ReverseProxy {
+	nextIndex := (lastServedIdx + 1) % len(serverlist)
+	server := serverlist[nextIndex]
+	lastServedIdx = nextIndex
+	return server
+}
+
+func createHost(urlstr string) *httputil.ReverseProxy {
+	u, _ := url.Parse(urlstr)
+	return httputil.NewSingleHostReverseProxy(u)
 }
