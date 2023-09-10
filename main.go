@@ -29,6 +29,7 @@ func main() {
 func forwardRequest(res http.ResponseWriter, req *http.Request) {
 	url := getServer()
 	rProxy := httputil.NewSingleHostReverseProxy(url)
+	log.Printf("Routing the request to the url %s", url.String())
 	rProxy.ServeHTTP(res, req)
 	//fmt.Fprintln(res, "Hello from load balancer")
 }
