@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -9,13 +9,18 @@ import (
 
 func startHealthCheck() {
 	s := gocron.NewScheduler(time.Local)
-
-	for _, server := range serverlist {
-		s.Every(2).Seconds().Do(func() {})
-		fmt.Println(server.Url)
+	for _, host := range serverlist {
+		_, err := s.Every(2).Seconds().Do(func(s *server) {
+			healthy := s.checkHealth()
+			if healthy {
+				log.Printf("'%s' is healthy!", s.Name)
+			} else {
+				log.Printf("'%s' is not healthy", s.Name)
+			}
+		}, host)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
-}
-
-func checkHealth() {
-
+	s.StartAsync()
 }
