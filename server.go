@@ -26,10 +26,12 @@ func newServer(name string, urlstr string) *server {
 
 func (s *server) checkHealth() bool {
 	resp, err := http.Head(s.URL)
+
 	if err != nil {
 		s.IsHealthy = false
 		return s.IsHealthy
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		s.IsHealthy = false
 		return s.IsHealthy
