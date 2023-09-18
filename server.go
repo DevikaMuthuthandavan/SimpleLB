@@ -39,3 +39,7 @@ func (s *server) checkHealth() bool {
 	s.IsHealthy = true
 	return s.IsHealthy
 }
+
+func (s *server) String() string {
+	return s.Name + " : " + s.URL
+}
