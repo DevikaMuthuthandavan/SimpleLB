@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -22,6 +23,23 @@ func InitLB() *LoadBalancer {
 	lb.backends = servers
 	lb.strategy = NewRRBalancingStrategy(servers)
 	return lb
+}
+
+func (lb *LoadBalancer) setStrategy(choice int) {
+	switch choice {
+	case 1:
+		fmt.Println("Applying Round Robin Strategy")
+		lb.strategy = NewRRBalancingStrategy(lb.backends)
+	case 2:
+		fmt.Println("Applying Static Strategy")
+		lb.strategy = NewStaticBalancingStrategy(lb.backends)
+	case 3:
+		fmt.Println("Applying Hash Based Strategy")
+		lb.strategy = NewHashBalancingStrategy(lb.backends)
+	default:
+		fmt.Println("Applying default Strategy (RR)")
+		lb.strategy = NewRRBalancingStrategy(lb.backends)
+	}
 }
 
 func (lb *LoadBalancer) proxy() {

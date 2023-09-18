@@ -13,7 +13,7 @@ type BalancingStrategy interface {
 	Init([]*server)
 	GetNextBackend() *server
 	RegisterBackend(*server)
-	PrintToplogy()
+	//PrintToplogy()
 }
 
 type RRBalancingStrategy struct {
@@ -70,7 +70,14 @@ func (s *StaticBalancingStrategy) Init(servers []*server) {
 }
 
 func (s *StaticBalancingStrategy) GetNextBackend() *server {
-	return s.servers[s.Index]
+	for i := 0; i < len(s.servers); i++ {
+		if s.servers[s.Index].IsHealthy {
+			return s.servers[s.Index]
+		} else {
+			s.Index = (s.Index + 1) % len(s.servers)
+		}
+	}
+	return nil
 }
 
 func (s *StaticBalancingStrategy) RegisterBackend(server *server) {
@@ -89,6 +96,12 @@ func (s *StaticBalancingStrategy) PrintToplogy() {
 
 func NewStaticBalancingStrategy(servers []*server) *StaticBalancingStrategy {
 	strategy := new(StaticBalancingStrategy)
+	strategy.Init(servers)
+	return strategy
+}
+
+func NewHashBalancingStrategy(servers []*server) *HashBalacingStrategy {
+	strategy := new(HashBalacingStrategy)
 	strategy.Init(servers)
 	return strategy
 }
@@ -137,12 +150,19 @@ func (s *HashBalacingStrategy) Init(servers []*server) {
 }
 
 func (s *HashBalacingStrategy) GetNextBackend() *server {
-	reqId := uuid.NewString()
-	slot := hash(reqId)
-	index := sort.Search(len(s.OccupiedSlots), func(i int) bool {
-		return s.OccupiedSlots[i] > slot
-	})
-	return s.servers[index%len(s.servers)]
+	for i := 0; i < 19; i++ {
+		reqId := uuid.NewString()
+		slot := hash(reqId)
+		index := sort.Search(len(s.OccupiedSlots), func(i int) bool {
+			return s.OccupiedSlots[i] > slot
+		})
+		server := s.servers[index%len(s.servers)]
+		if server.IsHealthy {
+			return server
+		}
+	}
+
+	return nil
 }
 
 func (s *HashBalacingStrategy) RegisterBackend(backend *server) {
